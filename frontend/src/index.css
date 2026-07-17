@@ -1,0 +1,7 @@
+/* index.css — global stylesheet entry point
+   These three @tailwind directives inject Tailwind's base reset,
+   reusable component classes, and all utility classes (like flex, p-4, text-lg).
+   Vite + PostCSS process this file automatically on every save. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
