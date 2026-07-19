@@ -1,6 +1,3 @@
-// src/pages/admin/AdminDashboard.jsx
-// Landing page for admins — shows stat cards and a list of recent exams.
-
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
@@ -11,12 +8,12 @@ import { fetchAllExams } from '../../store/slices/examSlice'
 function StatCard({ label, value, icon }) {
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-6 flex items-center gap-4 shadow-sm">
-      <div className="w-10 h-10 rounded bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
+      <div className="w-12 h-12 rounded bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold text-slate-900 leading-tight">{value ?? '—'}</p>
-        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1">{label}</p>
+        <p className="text-4xl font-extrabold text-slate-900 leading-none tracking-tight">{value ?? '—'}</p>
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1.5">{label}</p>
       </div>
     </div>
   )
@@ -43,8 +40,8 @@ function AdminDashboard() {
 
         {/* Page Header */}
         <div className="mb-8 border-b border-slate-200 pb-5">
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-1">Institutional overview of exams, students, and submissions.</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-slate-500 text-base mt-1.5">Institutional overview of exams, students, and submissions.</p>
         </div>
 
         {/* Stat Cards */}
@@ -89,32 +86,32 @@ function AdminDashboard() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold text-xs uppercase tracking-wider">
-                    <th className="px-6 py-3 text-left">Exam Title</th>
-                    <th className="px-6 py-3 text-left">Scheduled Date</th>
-                    <th className="px-6 py-3 text-left">Duration</th>
-                    <th className="px-6 py-3 text-left">Questions</th>
-                    <th className="px-6 py-3 text-left">Attempts</th>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold text-sm uppercase tracking-widest">
+                    <th className="px-6 py-4.5 text-left">Exam Title</th>
+                    <th className="px-6 py-4.5 text-left">Scheduled Date</th>
+                    <th className="px-6 py-4.5 text-left">Duration</th>
+                    <th className="px-6 py-4.5 text-left">Questions</th>
+                    <th className="px-6 py-4.5 text-left">Attempts</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {exams.slice(0, 5).map((exam) => (
                     <tr key={exam.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4.5">
                         <Link to={`/admin/exams/${exam.id}/questions`} className="text-blue-700 hover:underline font-bold">
                           {exam.title}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 text-slate-600">{formatDate(exam.startTime)}</td>
-                      <td className="px-6 py-4 text-slate-600">{exam.durationMinutes} minutes</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-600">
+                      <td className="px-6 py-4.5 text-slate-700">{formatDate(exam.startTime)}</td>
+                      <td className="px-6 py-4.5 text-slate-700">{exam.durationMinutes} minutes</td>
+                      <td className="px-6 py-4.5">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-slate-100 border border-slate-200 text-slate-600">
                           {exam._count?.questions ?? 0} Qs
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 font-medium">{exam._count?.attempts ?? 0}</td>
+                      <td className="px-6 py-4.5 text-slate-700 font-semibold">{exam._count?.attempts ?? 0}</td>
                     </tr>
                   ))}
                 </tbody>
