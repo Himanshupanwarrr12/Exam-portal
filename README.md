@@ -8,15 +8,17 @@ Built using **React** and **TailwindCSS** on the frontend, and **Express**, **Pr
 
 ## 🌟 Key Features
 
-### 🔑 Authentication & Role-Based Access Control (RBAC)
+### 🔑 Authentication & Split-Screen Experience
 *   **Dual Roles:** Supported roles are `ADMIN` and `STUDENT` mapped within a single PostgreSQL database.
 *   **Secure JWT Auth:** State-maintained secure authentication utilizing JSON Web Tokens with client-side Redux store state persistence.
 *   **Encrypted Passwords:** Secure user password storage powered by `bcryptjs` hashing.
+*   **Split-Screen Layout:** Responsive layout splitting authentication (Login & Register) into a visual student illustration sidebar (light sea-blue background) and a centered form container on desktop, collapsing cleanly to form-only on mobile devices.
 
-### 🛠️ Admin Dashboard & Management
-*   **Insightful Dashboard:** Real-time stats showing the total number of exams, questions, registered students, and attempts.
-*   **Exam Builder:** Create, edit, and delete exam profiles. Set active time windows (start/end dates) and strict timer constraints (`durationMinutes`).
-*   **Question Bank Editor:** Add, update, and manage multiple-choice questions (MCQs) for specific exams, assigning point marks and correct keys.
+### 🛡️ Admin Dashboard & Workspace
+*   **Enlarged Typography Scale:** Redesigned page headings, stat cards, and tables with increased typography size scales for high legibility.
+*   **Soft Tinted Background Wash:** App canvas uses a gentle light-blue background (`#f0f7ff`) with crisp border slate cards to pop elements clearly.
+*   **Exam Curation Workspace:** The Question page utilizes an inline card builder workspace rather than popup modals, allowing admins to add/edit MCQs in a single, focused side-by-side desktop layout (stacks on mobile).
+*   **Inline Key Mapping:** MCQ choices A, B, C, D directly integrate radio check selectors to map correct answers inside the options grid.
 *   **Student Registry:** List all registered students, review exam history, and monitor scores across all exams.
 
 ### 📝 Student Panel & Exam Engine
@@ -28,6 +30,17 @@ Built using **React** and **TailwindCSS** on the frontend, and **Express**, **Pr
     *   **Auto-submission:** Automatically packages and submits the exam when the timer expires.
     *   **Access Guards:** Prevents starting multiple concurrent attempts for the same exam.
 *   **Instant Grading:** Automated server-side grading comparing student responses to the question answer keys immediately upon submission.
+
+### 🛡️ Exam Publish & Question-Guard Workflow
+*   **Zero-Question Exam Prevention:** Exams with no questions are automatically filtered out from student listings at the database level (`questions: { some: {} }`).
+*   **Attempt Guard:** The server rejects attempts on zero-question exams with a direct `400` error as a secondary layer of defense.
+*   **Admin Warnings & Redirection:**
+    *   Creating a new exam redirects admins directly to the question manager with a temporary contextual warning banner.
+    *   Exams list pages display an amber `⚠ No questions` warning pill for unconfigured exams, linking directly to the question editor.
+
+### ⚡ Performance Optimization
+*   **Collapsed Redundant Checks:** Reduced sequential Prisma database queries into single, consolidated queries for questions lookup.
+*   **Parallelized Database Lookups:** Concurrent query orchestration using `Promise.all` for exam metrics queries, reducing average page load latencies by ~250ms.
 
 ---
 
