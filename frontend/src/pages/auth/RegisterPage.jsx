@@ -1,6 +1,3 @@
-// src/pages/auth/RegisterPage.jsx
-// Student self-registration page. Role is always STUDENT.
-
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
@@ -113,87 +110,112 @@ function RegisterPage() {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900 font-sans">
-      <div className="w-full max-w-md">
-
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded bg-blue-50 border border-blue-200 mb-3">
-            <svg className="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Account</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Register as a Student</p>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center lg:grid lg:grid-cols-12 text-slate-900 font-sans">
+      
+      {/* Left Column: Calm, professional illustration (Desktop only) */}
+      <div className="hidden lg:flex lg:col-span-6 bg-[#f0f7ff] min-h-screen flex-col justify-between p-12 text-slate-800 border-r border-slate-200 select-none relative overflow-hidden">
+        {/* Subtle dot pattern background */}
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#1e293b 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+        
+        {/* Brand */}
+        <div className="relative z-10 pt-2">
+          <h1 className="text-4xl lg:text-5xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+            Exam Portal
+          </h1>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
-          {successMessage && (
-            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded p-3 mb-5">
-              <svg className="w-4 h-4 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-emerald-700 text-sm">{successMessage}</span>
-            </div>
-          )}
+        {/* Dynamic Image Illustration (Student taking exam) */}
+        <div className="flex-1 flex items-center justify-center my-8 relative z-10">
+          <img
+            src="/online_exam_illustration.png"
+            alt="Student Learning Progress"
+            className="w-full max-w-[440px] object-contain drop-shadow-sm"
+          />
+        </div>
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded p-3">
-                <svg className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+        {/* Removed Caption bottom left completely */}
+        <div className="h-4 relative z-10"></div>
+      </div>
+
+      {/* Right Column: Form Panel (Centered on all screen sizes) */}
+      <div className="lg:col-span-6 w-full min-h-screen flex items-center justify-center p-6 sm:p-12 bg-slate-50">
+        <div className="w-full max-w-md">
+
+          {/* Logo - only visible on Mobile/Tablet */}
+          <div className="text-center lg:hidden mb-8">
+            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+              Exam Portal
+            </h1>
+            <p className="text-slate-500 text-sm mt-0.5">Register as a Student</p>
+          </div>
+
+          {/* Form Card */}
+          <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
+            {successMessage && (
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded p-3 mb-5">
+                <svg className="w-4 h-4 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-red-700 text-sm">{error}</span>
+                <span className="text-emerald-700 text-sm">{successMessage}</span>
               </div>
             )}
 
-            {renderField('reg-name',     'name',            'Full Name',        'text',     'Jane Doe',            'name')}
-            {renderField('reg-email',    'email',           'Email Address',    'email',    'email@institution.edu',     'email')}
-            {renderField('reg-password', 'password',        'Password',         'password', '••••••••',            'new-password')}
-            {renderField('reg-confirm',  'confirmPassword', 'Confirm Password', 'password', '••••••••',            'new-password')}
-
-            {/* Role Info */}
-            <div className="py-1">
-              <span className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded">
-                Student Account
-              </span>
-              <span className="text-slate-500 text-xs ml-2">Admins are added via server seeding</span>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              id="register-submit-btn"
-              type="submit"
-              disabled={loading || !!successMessage}
-              className="w-full py-2.5 px-4 rounded bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm
-                disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              {error && (
+                <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded p-3">
+                  <svg className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  Creating account...
+                  <span className="text-red-700 text-sm">{error}</span>
+                </div>
+              )}
+
+              {renderField('reg-name',     'name',            'Full Name',        'text',     'Jane Doe',            'name')}
+              {renderField('reg-email',    'email',           'Email Address',    'email',    'email@institution.edu',     'email')}
+              {renderField('reg-password', 'password',        'Password',         'password', '••••••••',            'new-password')}
+              {renderField('reg-confirm',  'confirmPassword', 'Confirm Password', 'password', '••••••••',            'new-password')}
+
+              {/* Role Info */}
+              <div className="py-1">
+                <span className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded">
+                  Student Account
                 </span>
-              ) : 'Create Account'}
-            </button>
-          </form>
+                <span className="text-slate-500 text-xs ml-2">Admins are added via server seeding</span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                id="register-submit-btn"
+                type="submit"
+                disabled={loading || !!successMessage}
+                className="w-full py-2.5 px-4 rounded bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm
+                  disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Creating account...
+                  </span>
+                ) : 'Create Account'}
+              </button>
+            </form>
+          </div>
+
+          {/* Footer Link */}
+          <p className="text-center text-slate-600 text-sm mt-6">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="text-blue-700 hover:underline font-bold transition-all"
+            >
+              Sign in
+            </Link>
+          </p>
+
         </div>
-
-        {/* Footer Link */}
-        <p className="text-center text-slate-600 text-sm mt-6">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-blue-700 hover:underline font-bold transition-all"
-          >
-            Sign in
-          </Link>
-        </p>
-
       </div>
     </div>
   )
