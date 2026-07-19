@@ -44,6 +44,11 @@ export const startAttempt = async (req, res) => {
       return res.status(403).json({ message: 'This exam has already ended.' })
     }
 
+    // Guard: block attempts on exams with no questions
+    if (exam.questions.length === 0) {
+      return res.status(400).json({ message: 'This exam has no questions and cannot be attempted.' })
+    }
+
     // 2. Find existing attempt or create a new one
     // We use a transaction or just a simple find-first-then-create pattern.
     let attempt = await prisma.attempt.findUnique({

@@ -178,9 +178,14 @@ export const getAvailableExams = async (req, res) => {
   try {
     const now = new Date()
 
-    // Fetch all exams that haven't ended yet
+    // Fetch all exams that:
+    //   1. Haven't ended yet
+    //   2. Have at least one question — exams with zero questions are never attemptable
     const exams = await prisma.exam.findMany({
-      where: { endTime: { gt: now } }, // only future/current exams
+      where: {
+        endTime: { gt: now },
+        questions: { some: {} }, // ← exclude zero-question exams
+      },
       include: {
         _count: { select: { questions: true } },
       },

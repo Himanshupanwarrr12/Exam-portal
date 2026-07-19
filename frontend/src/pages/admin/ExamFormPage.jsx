@@ -1,7 +1,5 @@
 // src/pages/admin/ExamFormPage.jsx
 // Dual-purpose page: create a new exam OR edit an existing one.
-// If :examId is in the URL → edit mode (pre-fetches and pre-fills the form).
-// If no :examId → create mode (empty form).
 
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -10,18 +8,15 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import { createExam, updateExam } from '../../store/slices/examSlice'
 import axiosClient from '../../api/axiosClient'
 
-// Utility: converts a JS Date (or ISO string) to the value needed by datetime-local input
-// HTML datetime-local format: "YYYY-MM-DDTHH:mm"
 const toDatetimeLocal = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  // getTimezoneOffset returns offset in minutes; we adjust to show local time in the input
   const offset = d.getTimezoneOffset() * 60000
   return new Date(d - offset).toISOString().slice(0, 16)
 }
 
 function ExamFormPage() {
-  const { examId } = useParams() // undefined for create, a number string for edit
+  const { examId } = useParams()
   const isEditMode = Boolean(examId)
 
   const dispatch = useDispatch()
@@ -39,7 +34,6 @@ function ExamFormPage() {
   const [apiError, setApiError] = useState('')
   const [loadingExam, setLoadingExam] = useState(isEditMode)
 
-  // ── Pre-fill form in edit mode ─────────────────────────────────────────────
   useEffect(() => {
     if (!isEditMode) return
 
@@ -63,7 +57,6 @@ function ExamFormPage() {
     fetchExam()
   }, [examId, isEditMode])
 
-  // ── Validation ─────────────────────────────────────────────────────────────
   const validate = () => {
     const e = {}
     if (!form.title.trim())              e.title           = 'Title is required.'
@@ -83,7 +76,6 @@ function ExamFormPage() {
     if (apiError) setApiError('')
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
     const errs = validate()
@@ -96,7 +88,6 @@ function ExamFormPage() {
       title:           form.title.trim(),
       description:     form.description.trim() || null,
       durationMinutes: parseInt(form.durationMinutes),
-      // datetime-local value is already an ISO-compatible string — new Date() parses it correctly
       startTime:       new Date(form.startTime).toISOString(),
       endTime:         new Date(form.endTime).toISOString(),
     }
@@ -110,106 +101,117 @@ function ExamFormPage() {
 
     setSubmitting(false)
 
-    // If the thunk succeeded (not rejected), navigate to exams list
     if (!result.error) {
-      navigate('/admin/exams')
+      if (isEditMode) {
+        navigate('/admin/exams')
+      } else {
+        // Redirect straight to questions so the admin is guided to add questions immediately.
+        // Pass a state flag so QuestionsPage can show a contextual "now add questions" banner.
+        navigate(`/admin/exams/${result.payload.id}/questions`, {
+          state: { fromCreate: true, examTitle: result.payload.title },
+        })
+      }
     } else {
       setApiError(result.payload || 'Something went wrong.')
     }
   }
 
-  // ── Shared input style ─────────────────────────────────────────────────────
   const inputCls = (field) =>
-    `w-full px-4 py-3 rounded-lg bg-slate-700/80 border text-white text-sm placeholder-slate-500
-     focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all
-     ${errors[field] ? 'border-red-500/70' : 'border-slate-600/70 hover:border-slate-500/70'}`
+    `w-full px-3 py-2 border rounded bg-white text-slate-900 text-sm placeholder-slate-400
+     focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all
+     ${errors[field] ? 'border-red-500' : 'border-slate-200'}`
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <AdminLayout>
-      <div className="p-8 max-w-2xl">
+      <div className="p-8 max-w-2xl mx-auto">
 
-        {/* Header */}
-        <div className="mb-8">
-          <button onClick={() => navigate('/admin/exams')} className="text-slate-400 hover:text-slate-200 text-sm flex items-center gap-1 mb-4 transition-colors">
+        {/* Back navigation */}
+        <div className="mb-6">
+          <button onClick={() => navigate('/admin/exams')} className="text-slate-500 hover:text-slate-950 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Exams
           </button>
-          <h1 className="text-2xl font-bold text-white">
-            {isEditMode ? 'Edit Exam' : 'Create New Exam'}
+        </div>
+
+        {/* Header */}
+        <div className="mb-8 border-b border-slate-200 pb-5">
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEditMode ? 'Edit Exam Schedule' : 'Schedule New Exam'}
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {isEditMode ? 'Update the exam details below.' : 'Fill in the details to schedule a new exam.'}
+          <p className="text-slate-500 text-sm mt-1">
+            Configure examination timing, guidelines, and metadata constraints.
           </p>
         </div>
 
         {loadingExam ? (
-          <div className="text-slate-500 py-12 text-center">Loading exam details...</div>
+          <div className="text-slate-400 py-12 text-center">Loading exam parameters...</div>
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+          <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
             {apiError && (
-              <div className="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg">{apiError}</div>
+              <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+                {apiError}
+              </div>
             )}
 
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Exam Title *</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Exam Title *</label>
                 <input id="exam-title" name="title" value={form.title} onChange={handleChange}
-                  placeholder="e.g. BCA Semester 3 – DBMS" className={inputCls('title')} />
-                {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title}</p>}
+                  placeholder="e.g. Semester III - Data Structures" className={inputCls('title')} />
+                {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Description <span className="text-slate-500">(optional)</span></label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Instructions / Description</label>
                 <textarea id="exam-description" name="description" value={form.description} onChange={handleChange}
-                  rows={3} placeholder="Brief instructions for students..."
+                  rows={3} placeholder="Provide instructions regarding grading, constraints, etc."
                   className={`${inputCls('description')} resize-none`} />
               </div>
 
               {/* Duration */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Duration (minutes) *</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Allowed Duration (minutes) *</label>
                 <input id="exam-duration" name="durationMinutes" type="number" min="1"
                   value={form.durationMinutes} onChange={handleChange}
                   placeholder="e.g. 60" className={inputCls('durationMinutes')} />
-                {errors.durationMinutes && <p className="mt-1 text-xs text-red-400">{errors.durationMinutes}</p>}
+                {errors.durationMinutes && <p className="mt-1 text-xs text-red-600">{errors.durationMinutes}</p>}
               </div>
 
-              {/* Start and End Times — side by side */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Start and End Times */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Start Time *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Access Start *</label>
                   <input id="exam-start" name="startTime" type="datetime-local"
                     value={form.startTime} onChange={handleChange} className={inputCls('startTime')} />
-                  {errors.startTime && <p className="mt-1 text-xs text-red-400">{errors.startTime}</p>}
+                  {errors.startTime && <p className="mt-1 text-xs text-red-600">{errors.startTime}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">End Time *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Access End *</label>
                   <input id="exam-end" name="endTime" type="datetime-local"
                     value={form.endTime} onChange={handleChange} className={inputCls('endTime')} />
-                  {errors.endTime && <p className="mt-1 text-xs text-red-400">{errors.endTime}</p>}
+                  {errors.endTime && <p className="mt-1 text-xs text-red-600">{errors.endTime}</p>}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="submit"
                   disabled={submitting}
                   id="exam-form-submit"
-                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-500/20"
+                  className="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider rounded transition-all focus:ring-2 focus:ring-blue-500/20"
                 >
-                  {submitting ? 'Saving...' : (isEditMode ? 'Update Exam' : 'Create Exam')}
+                  {submitting ? 'Saving Configuration...' : (isEditMode ? 'Save Changes' : 'Publish Schedule')}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/admin/exams')}
-                  className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg border border-slate-700 transition-colors"
+                  className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider border border-slate-200 rounded transition-all focus:ring-2 focus:ring-slate-500/20"
                 >
                   Cancel
                 </button>

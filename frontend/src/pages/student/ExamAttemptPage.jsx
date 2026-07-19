@@ -1,13 +1,11 @@
 // src/pages/student/ExamAttemptPage.jsx
-// Full-screen interface for taking an exam. 
-// Features: one-question-at-a-time, auto-save, live countdown timer, auto-submit on timeout.
+// Full-screen interface for taking an exam.
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
 import { startExam, saveAnswer, submitExam, clearAttempt } from '../../store/slices/attemptSlice'
 
-// ── Helper: Format Time ───────────────────────────────────────────────────────
 const formatTimeLeft = (ms) => {
   if (ms <= 0) return '00:00:00'
   const totalSeconds = Math.floor(ms / 1000)
@@ -36,10 +34,8 @@ function ExamAttemptPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [timeLeftStr, setTimeLeftStr] = useState('--:--:--')
   
-  // We use a ref to track if we've already triggered auto-submit so we don't spam the API
   const hasAutoSubmitted = useRef(false)
 
-  // 1. Start Exam on Mount
   useEffect(() => {
     dispatch(startExam(parseInt(examId)))
     return () => {
@@ -47,8 +43,6 @@ function ExamAttemptPage() {
     }
   }, [dispatch, examId])
 
-  // 2. Timer Logic
-  // We use useCallback to avoid dependency issues in the interval
   const calculateTime = useCallback(() => {
     if (!endTime || status !== 'in_progress') return
 
@@ -58,7 +52,6 @@ function ExamAttemptPage() {
 
     if (diff <= 0) {
       setTimeLeftStr('00:00:00')
-      // AUTO SUBMIT
       if (!hasAutoSubmitted.current) {
         hasAutoSubmitted.current = true
         dispatch(submitExam({ attemptId, autoSubmit: true }))
@@ -69,16 +62,12 @@ function ExamAttemptPage() {
   }, [endTime, status, attemptId, dispatch])
 
   useEffect(() => {
-    // Run immediately once, then every 1 second
     calculateTime()
     const timer = setInterval(calculateTime, 1000)
     return () => clearInterval(timer)
   }, [calculateTime])
 
-
-  // ── Handlers ────────────────────────────────────────────────────────────────
   const handleOptionSelect = (questionId, option) => {
-    // Optimistically update the UI, then dispatch the API call
     dispatch(saveAnswer({ attemptId, questionId, selectedOption: option }))
   }
 
@@ -89,51 +78,46 @@ function ExamAttemptPage() {
     }
   }
 
-
-  // ── Render States ───────────────────────────────────────────────────────────
-
   if (status === 'loading') {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Loading your exam...</div>
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-sans">Loading your exam session...</div>
   }
 
   if (status === 'error' && !questions.length) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mb-4">
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
+        <div className="w-12 h-12 bg-red-50 border border-red-200 text-red-700 rounded flex items-center justify-center mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Cannot Start Exam</h1>
-        <p className="text-slate-400 mb-6">{error}</p>
-        <button onClick={() => navigate('/student/exams')} className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg">Return to Dashboard</button>
+        <h1 className="text-xl font-bold text-slate-900 mb-1">Session Blocked</h1>
+        <p className="text-slate-600 text-sm max-w-sm mb-6">{error}</p>
+        <button onClick={() => navigate('/student/exams')} className="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs uppercase tracking-wider rounded">Return to Dashboard</button>
       </div>
     )
   }
 
   if (status === 'submitted') {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_-12px] shadow-emerald-500/50">
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
+        <div className="w-16 h-16 bg-green-50 border border-green-200 text-green-700 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Exam Submitted Successfully!</h1>
-        <p className="text-slate-400 mb-8">Your answers have been recorded.</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Exam Attempt Completed</h1>
+        <p className="text-slate-500 text-sm mb-8">Your session answers have been securely graded and locked.</p>
         
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8 w-full max-w-sm">
-          <p className="text-sm text-slate-500 mb-1 uppercase tracking-wider font-semibold">Your Score</p>
-          <p className="text-5xl font-bold text-white">
-            {result?.score} <span className="text-2xl text-slate-500">/ {result?.totalMarks}</span>
+        <div className="bg-white border border-slate-200 rounded-lg p-8 mb-8 w-full max-w-sm shadow-sm">
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Final Evaluation</p>
+          <p className="text-4xl font-bold text-slate-900">
+            {result?.score} <span className="text-lg text-slate-400 font-normal">/ {result?.totalMarks} Marks</span>
           </p>
         </div>
 
-        <button onClick={() => navigate('/student/dashboard')} className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg shadow-lg shadow-violet-500/20 transition-all">
-          Back to Dashboard
+        <button onClick={() => navigate('/student/dashboard')} className="px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold uppercase tracking-wider rounded transition-all focus:ring-2 focus:ring-blue-500/20">
+          Return to Dashboard
         </button>
       </div>
     )
   }
 
-  // ── Main Attempt UI (in_progress or submitting) ─────────────────────────────
-  
   if (!questions || questions.length === 0) return null
 
   const currentQ = questions[currentIndex]
@@ -142,28 +126,28 @@ function ExamAttemptPage() {
   const answeredCount = Object.keys(answers).length
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
       
       {/* ── Top Navigation Bar ───────────────────────────────────────────── */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-lg font-bold text-white leading-tight">{examInfo?.title}</h1>
-          <p className="text-xs text-slate-400 mt-0.5">Question {currentIndex + 1} of {questions.length}</p>
+          <h1 className="text-base font-bold text-slate-900 leading-tight">{examInfo?.title}</h1>
+          <p className="text-xs text-slate-500 mt-1">Question {currentIndex + 1} of {questions.length}</p>
         </div>
 
         <div className="flex items-center gap-6">
           {/* Timer Display */}
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-4 py-2 rounded-lg">
-            <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span className="font-mono text-lg font-bold text-white tracking-wider">{timeLeftStr}</span>
+          <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-4 py-1.5 rounded">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Remaining:</span>
+            <span className="font-mono text-sm font-bold text-slate-800 tracking-wider">{timeLeftStr}</span>
           </div>
 
           <button
             onClick={handleManualSubmit}
             disabled={status === 'submitting'}
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
+            className="px-4 py-2 bg-red-700 hover:bg-red-800 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider rounded transition-all focus:ring-2 focus:ring-red-500/20"
           >
-            {status === 'submitting' ? 'Submitting...' : 'Submit Exam'}
+            {status === 'submitting' ? 'Submitting...' : 'Finish Attempt'}
           </button>
         </div>
       </header>
@@ -176,10 +160,10 @@ function ExamAttemptPage() {
           <div className="max-w-3xl mx-auto">
             
             <div className="mb-8">
-              <span className="inline-block px-3 py-1 rounded bg-violet-500/15 text-violet-400 text-xs font-bold mb-4 uppercase tracking-wider">
+              <span className="inline-block px-2.5 py-0.5 border border-slate-200 bg-slate-100 rounded text-slate-600 text-xs font-bold mb-4 uppercase tracking-wider">
                 Question {currentIndex + 1}
               </span>
-              <h2 className="text-2xl font-medium text-white leading-relaxed">
+              <h2 className="text-xl font-bold text-slate-900 leading-relaxed">
                 {currentQ.text}
               </h2>
             </div>
@@ -190,18 +174,17 @@ function ExamAttemptPage() {
                 return (
                   <label
                     key={opt}
-                    className={`flex items-start gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                    className={`flex items-start gap-4 p-5 rounded border cursor-pointer transition-all duration-150
                       ${isSelected 
-                        ? 'border-violet-500 bg-violet-500/10' 
-                        : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-800'}`}
+                        ? 'border-blue-600 bg-blue-50/20' 
+                        : 'border-slate-200 bg-white hover:border-slate-300'}`}
                   >
-                    <div className="pt-0.5">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
-                        ${isSelected ? 'border-violet-400' : 'border-slate-500'}`}>
-                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-violet-400" />}
+                    <div className="pt-1">
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors
+                        ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-white'}`}>
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
                     </div>
-                    {/* Hidden radio input for accessibility */}
                     <input
                       type="radio"
                       name={`q-${currentQ.id}`}
@@ -211,7 +194,7 @@ function ExamAttemptPage() {
                       className="sr-only"
                     />
                     <div className="flex-1">
-                      <span className="text-white text-lg">{currentQ[`option${opt}`]}</span>
+                      <span className="text-slate-800 text-base font-semibold">{currentQ[`option${opt}`]}</span>
                     </div>
                   </label>
                 )
@@ -219,31 +202,28 @@ function ExamAttemptPage() {
             </div>
 
             {/* Next / Prev Navigation */}
-            <div className="flex items-center justify-between mt-12 pt-6 border-t border-slate-800">
+            <div className="flex items-center justify-between mt-12 pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentIndex(p => Math.max(0, p - 1))}
                 disabled={isFirst}
-                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-300 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold uppercase tracking-wider rounded transition-all"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                Previous
+                ← Previous
               </button>
               
               {!isLast ? (
                 <button
                   onClick={() => setCurrentIndex(p => Math.min(questions.length - 1, p + 1))}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold uppercase tracking-wider rounded transition-all shadow-none"
                 >
-                  Next
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  Next →
                 </button>
               ) : (
                 <button
                   onClick={handleManualSubmit}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider rounded transition-all shadow-none"
                 >
-                  Finish Exam
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Finalize Submit
                 </button>
               )}
             </div>
@@ -252,14 +232,14 @@ function ExamAttemptPage() {
         </main>
 
         {/* Right Area: Question Map Sidebar */}
-        <aside className="w-72 border-l border-slate-800 bg-slate-900/50 flex flex-col hidden md:flex">
-          <div className="p-4 border-b border-slate-800">
-            <h3 className="font-semibold text-white">Question Navigator</h3>
+        <aside className="w-70 border-l border-slate-200 bg-white flex flex-col hidden md:flex">
+          <div className="p-4 border-b border-slate-200 bg-slate-50">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500">Navigator Map</h3>
             <p className="text-xs text-slate-400 mt-1">{answeredCount} of {questions.length} answered</p>
             {/* Progress bar */}
-            <div className="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+            <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden border border-slate-200">
               <div 
-                className="bg-violet-500 h-full transition-all duration-300"
+                className="bg-blue-600 h-full transition-all duration-300"
                 style={{ width: `${(answeredCount / questions.length) * 100}%` }}
               />
             </div>
@@ -271,14 +251,14 @@ function ExamAttemptPage() {
                 const isAnswered = !!answers[q.id]
                 const isCurrent = idx === currentIndex
                 
-                let btnCls = 'h-10 rounded-lg text-sm font-bold border transition-all duration-200 flex items-center justify-center '
+                let btnCls = 'h-9 rounded text-xs font-bold border transition-all duration-150 flex items-center justify-center '
                 
                 if (isCurrent) {
-                  btnCls += 'border-violet-400 bg-violet-500/20 text-violet-300 ring-2 ring-violet-500/30'
+                  btnCls += 'border-blue-600 bg-blue-50 text-blue-700 font-bold ring-2 ring-blue-500/10'
                 } else if (isAnswered) {
-                  btnCls += 'border-slate-700 bg-slate-800 text-white hover:border-slate-500'
+                  btnCls += 'border-slate-200 bg-slate-100 text-slate-700'
                 } else {
-                  btnCls += 'border-slate-800 text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+                  btnCls += 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-700'
                 }
 
                 return (
