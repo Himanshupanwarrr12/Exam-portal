@@ -1,7 +1,3 @@
-// src/components/admin/AdminLayout.jsx
-// Shared layout wrapper for all admin pages.
-// Features a light-mode sidebar with a right border and crisp navigation.
-
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../store/slices/authSlice'
@@ -58,24 +54,15 @@ function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900 font-sans">
+    <div className="flex h-screen bg-[#f0f7ff] overflow-hidden text-slate-900 font-sans">
 
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
 
         {/* Brand */}
         <div className="px-6 py-5 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-slate-900 font-bold text-sm tracking-tight">ExamPortal</p>
-              <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Institution</p>
-            </div>
-          </div>
+          <p className="text-blue-900 font-extrabold text-lg tracking-tight">Exam Portal</p>
+          <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Institution</p>
         </div>
 
         {/* Nav Links */}
@@ -117,7 +104,7 @@ function AdminLayout({ children }) {
       </aside>
 
       {/* ── Main Content ──────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto bg-slate-50">
+      <main className="flex-1 overflow-y-auto bg-[#f0f7ff]">
         {children}
       </main>
 
