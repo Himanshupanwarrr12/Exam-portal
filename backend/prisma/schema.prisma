@@ -1,170 +1,104 @@
-// schema.prisma — the single source of truth for your database structure.
-// Prisma reads this file to:
-//   1. Generate SQL migration files (prisma migrate dev)
-//   2. Generate the Prisma Client — the JS object you use in controllers to query the DB.
-//
-// Every time you change this file you must run:  npx prisma migrate dev --name <description>
-// That creates a new SQL file in prisma/migrations/ and applies it to Neon.
-
 generator client {
-  provider = "prisma-client-js" // tells Prisma to generate a JS/TS client
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  // NOTE (Prisma 7): the connection URL is NOT set here anymore.
-  // It is configured in prisma.config.ts via datasource.url,
-  // which reads DATABASE_URL from the .env file.
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ENUMS
-// An enum restricts a field to a fixed set of allowed values.
-// PostgreSQL stores these as a native ENUM type (efficient and type-safe).
-// ══════════════════════════════════════════════════════════════════════════════
-
-// Role — determines which parts of the app a user can access
 enum Role {
-  ADMIN    // can create/manage exams and view all results
-  STUDENT  // can attempt exams and view own results
+  ADMIN
+  STUDENT
 }
 
-// AttemptStatus — tracks the lifecycle of a single exam attempt
 enum AttemptStatus {
-  IN_PROGRESS    // student has started but not yet submitted
-  SUBMITTED      // student manually clicked "Submit"
-  AUTO_SUBMITTED // timer ran out and the system submitted automatically
+  IN_PROGRESS
+  SUBMITTED
+  AUTO_SUBMITTED
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MODELS (each model = one table in PostgreSQL)
-// ══════════════════════════════════════════════════════════════════════════════
-
-// ── User ──────────────────────────────────────────────────────────────────────
-// Stores both Admins and Students in the same table, distinguished by the role field.
-// Using a single table is simpler for this project size and avoids complex JOINs.
 model User {
-  id           Int      @id @default(autoincrement()) // PK, auto-increments from 1
+  id           Int      @id @default(autoincrement())
   name         String
-  email        String   @unique                        // unique index auto-created by Prisma
-  passwordHash String   // bcrypt hash — NEVER store the plain password
-  role         Role     @default(STUDENT)              // new registrations are students by default
-  createdAt    DateTime @default(now())                // timestamp set automatically on insert
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
 
-  // ── Relations (no extra columns — these are just for Prisma to know the shape)
-  examsCreated Exam[]    @relation("ExamCreator") // an ADMIN can create many exams
-  attempts     Attempt[]                           // a STUDENT can have many attempts
+  examsCreated Exam[]    @relation("ExamCreator")
+  attempts     Attempt[]
 
-  // ── Indexes
-  // Querying users by role is common (e.g., "list all students"), so we index it.
   @@index([role])
 }
 
-// ── Exam ──────────────────────────────────────────────────────────────────────
-// Represents a scheduled examination created by an Admin.
 model Exam {
   id              Int      @id @default(autoincrement())
   title           String
-  description     String?  // nullable — admin may leave this blank
-  durationMinutes Int      // how long students get (in minutes) once they start
-  startTime       DateTime // when the exam window opens (students can begin after this)
-  endTime         DateTime // when the exam window closes (no new attempts after this)
+  description     String?
+  durationMinutes Int
+  startTime       DateTime
+  endTime         DateTime
   createdAt       DateTime @default(now())
 
-  // ── Foreign Key — the Admin who created this exam
   createdBy Int
   creator   User @relation("ExamCreator", fields: [createdBy], references: [id])
 
-  // ── Relations
-  questions Question[] // an exam has many questions
-  attempts  Attempt[]  // an exam can be attempted by many students
+  questions Question[]
+  attempts  Attempt[]
 
-  // ── Indexes
-  // We frequently query exams by their time window (e.g., "show available exams")
-  // and by which admin created them.
   @@index([startTime, endTime])
   @@index([createdBy])
 }
 
-// ── Question ──────────────────────────────────────────────────────────────────
-// Each row is one MCQ question belonging to a specific exam.
-// All four options are stored as separate columns for simplicity.
 model Question {
   id            Int    @id @default(autoincrement())
-  text          String // the question prompt shown to the student
-  optionA       String // text of option A
-  optionB       String // text of option B
-  optionC       String // text of option C
-  optionD       String // text of option D
-  correctOption String // "A" | "B" | "C" | "D" — compared against Answer.selectedOption during grading
-  marks         Int    @default(1) // points awarded for a correct answer
+  text          String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String
+  marks         Int    @default(1)
 
-  // ── Foreign Key
-  // onDelete: Cascade — if an Exam is deleted, all its Questions are deleted automatically.
-  // This prevents orphaned question records.
   examId Int
   exam   Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
 
-  // ── Relations
-  answers Answer[] // a question can appear in many answers (across many attempts)
+  answers Answer[]
 
-  // ── Indexes
-  // We always fetch questions by examId (e.g., "get all questions for exam 5")
   @@index([examId])
 }
 
-// ── Attempt ───────────────────────────────────────────────────────────────────
-// One row per student-per-exam session. If a student retakes an exam (if allowed),
-// a new Attempt row is created. Score is null until the attempt is graded.
 model Attempt {
   id          Int           @id @default(autoincrement())
-  startedAt   DateTime      @default(now()) // when the student clicked "Start Exam"
-  submittedAt DateTime?     // null while IN_PROGRESS; set on submit or auto-submit
-  score       Int?          // null until graded; total marks earned
-  totalMarks  Int?          // null until graded; maximum possible marks for this exam
+  startedAt   DateTime      @default(now())
+  submittedAt DateTime?
+  score       Int?
+  totalMarks  Int?
   status      AttemptStatus @default(IN_PROGRESS)
 
-  // ── Foreign Keys
   examId    Int
   exam      Exam @relation(fields: [examId], references: [id])
   studentId Int
   student   User @relation(fields: [studentId], references: [id])
 
-  // ── Relations
   answers Answer[]
 
-  // ── Unique Constraint
-  // Prevents a student from starting the same exam twice simultaneously.
-  // (One active attempt per student per exam at a time.)
   @@unique([examId, studentId])
 
-  // ── Indexes
-  // Common queries: "all attempts by student X", "all attempts for exam Y"
   @@index([studentId])
   @@index([examId])
 }
 
-// ── Answer ────────────────────────────────────────────────────────────────────
-// One row per question answered within an attempt.
-// This is the auto-save table — each time a student selects an option, we
-// upsert a row here. On submit, the server reads all Answer rows for the
-// attempt and compares selectedOption with Question.correctOption to calculate score.
 model Answer {
   id             Int    @id @default(autoincrement())
-  selectedOption String // "A" | "B" | "C" | "D" — what the student chose
+  selectedOption String
 
-  // ── Foreign Keys
-  // Cascade: if an Attempt is deleted, all its Answers are deleted automatically.
   attemptId  Int
   attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   questionId Int
   question   Question @relation(fields: [questionId], references: [id])
 
-  // ── Unique Constraint
-  // A student can only have ONE answer per question per attempt.
-  // On re-selection, we UPDATE (upsert) this row rather than inserting a duplicate.
   @@unique([attemptId, questionId])
 
-  // ── Index on attemptId for fast lookup of all answers in an attempt (used during grading)
   @@index([attemptId])
 }
