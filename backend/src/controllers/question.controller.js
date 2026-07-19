@@ -1,24 +1,11 @@
-// src/controllers/question.controller.js
-// CRUD for MCQ questions — all operations are admin-only.
-
 import prisma from '../lib/prismaClient.js'
 
-// ── GET QUESTIONS BY EXAM ─────────────────────────────────────────────────────
-// GET /api/questions?examId=:id
-// Returns all questions for a given exam, in insertion order.
-// Used by: Admin → QuestionsPage, and later by the exam engine (Phase 5).
 export const getQuestionsByExam = async (req, res) => {
   try {
     const examId = parseInt(req.query.examId)
 
     if (!examId || isNaN(examId)) {
       return res.status(400).json({ message: 'A valid examId query parameter is required.' })
-    }
-
-    // Verify the exam exists first
-    const exam = await prisma.exam.findUnique({ where: { id: examId } })
-    if (!exam) {
-      return res.status(404).json({ message: 'Exam not found.' })
     }
 
     const questions = await prisma.question.findMany({
@@ -33,26 +20,20 @@ export const getQuestionsByExam = async (req, res) => {
   }
 }
 
-// ── ADD QUESTION ──────────────────────────────────────────────────────────────
-// POST /api/questions   (Admin only)
-// Body: { examId, text, optionA, optionB, optionC, optionD, correctOption, marks }
 export const addQuestion = async (req, res) => {
   try {
     const { examId, text, optionA, optionB, optionC, optionD, correctOption, marks } = req.body
 
-    // ── Validate all required fields
     if (!examId || !text || !optionA || !optionB || !optionC || !optionD || !correctOption) {
       return res.status(400).json({
         message: 'examId, question text, all four options, and correct option are required.',
       })
     }
 
-    // correctOption must be exactly one of the allowed letters
     if (!['A', 'B', 'C', 'D'].includes(correctOption.toUpperCase())) {
       return res.status(400).json({ message: 'correctOption must be "A", "B", "C", or "D".' })
     }
 
-    // Confirm the exam exists before adding a question to it
     const exam = await prisma.exam.findUnique({ where: { id: parseInt(examId) } })
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found.' })
@@ -67,7 +48,7 @@ export const addQuestion = async (req, res) => {
         optionC: optionC.trim(),
         optionD: optionD.trim(),
         correctOption: correctOption.toUpperCase(),
-        marks: parseInt(marks) || 1, // default 1 mark per question
+        marks: parseInt(marks) || 1,
       },
     })
 
@@ -78,9 +59,6 @@ export const addQuestion = async (req, res) => {
   }
 }
 
-// ── UPDATE QUESTION ───────────────────────────────────────────────────────────
-// PUT /api/questions/:id   (Admin only)
-// Only updates fields that are actually sent in the body (partial update).
 export const updateQuestion = async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -115,8 +93,6 @@ export const updateQuestion = async (req, res) => {
   }
 }
 
-// ── DELETE QUESTION ───────────────────────────────────────────────────────────
-// DELETE /api/questions/:id   (Admin only)
 export const deleteQuestion = async (req, res) => {
   try {
     const id = parseInt(req.params.id)
