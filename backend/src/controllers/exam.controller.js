@@ -1,23 +1,15 @@
-// src/controllers/exam.controller.js
-// Full CRUD for the Exam model — all write operations are admin-only
-// (enforced by verifyToken + requireAdmin in the routes).
-
 import prisma from '../lib/prismaClient.js'
 
-// ── GET ALL EXAMS (Admin) ─────────────────────────────────────────────────────
-// GET /api/exams
-// Returns all exams with question count and attempt count (for the admin table).
-// Prisma's _count includes nested counts without loading all records.
 export const getAllExams = async (req, res) => {
   try {
     const exams = await prisma.exam.findMany({
-      orderBy: { createdAt: 'desc' }, // newest first
+      orderBy: { createdAt: 'desc' },
       include: {
-        creator: { select: { id: true, name: true } }, // who created the exam
+        creator: { select: { id: true, name: true } },
         _count: {
           select: {
-            questions: true, // how many questions
-            attempts: true,  // how many students have attempted
+            questions: true,
+            attempts: true,
           },
         },
       },
@@ -29,11 +21,6 @@ export const getAllExams = async (req, res) => {
   }
 }
 
-// ── GET SINGLE EXAM ───────────────────────────────────────────────────────────
-// GET /api/exams/:id
-// Returns the exam with its questions. Used in the edit form and exam attempt.
-// For admins: includes correct answers. For students, correct answers are hidden
-// (handled in the attempt controller in Phase 5).
 export const getExamById = async (req, res) => {
   try {
     const examId = parseInt(req.params.id)
@@ -41,7 +28,7 @@ export const getExamById = async (req, res) => {
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
       include: {
-        questions: { orderBy: { id: 'asc' } }, // questions in insertion order
+        questions: { orderBy: { id: 'asc' } },
         _count: { select: { attempts: true } },
       },
     })
@@ -57,14 +44,10 @@ export const getExamById = async (req, res) => {
   }
 }
 
-// ── CREATE EXAM ───────────────────────────────────────────────────────────────
-// POST /api/exams   (Admin only)
-// Body: { title, description, durationMinutes, startTime, endTime }
 export const createExam = async (req, res) => {
   try {
     const { title, description, durationMinutes, startTime, endTime } = req.body
 
-    // Validate required fields
     if (!title || !durationMinutes || !startTime || !endTime) {
       return res.status(400).json({ message: 'Title, duration, start time, and end time are required.' })
     }
@@ -84,7 +67,6 @@ export const createExam = async (req, res) => {
       return res.status(400).json({ message: 'End time must be after start time.' })
     }
 
-    // req.user.userId is set by verifyToken middleware
     const exam = await prisma.exam.create({
       data: {
         title: title.trim(),
@@ -106,14 +88,11 @@ export const createExam = async (req, res) => {
   }
 }
 
-// ── UPDATE EXAM ───────────────────────────────────────────────────────────────
-// PUT /api/exams/:id   (Admin only)
 export const updateExam = async (req, res) => {
   try {
     const examId = parseInt(req.params.id)
     const { title, description, durationMinutes, startTime, endTime } = req.body
 
-    // Check exam exists
     const existing = await prisma.exam.findUnique({ where: { id: examId } })
     if (!existing) {
       return res.status(404).json({ message: 'Exam not found.' })
@@ -147,9 +126,6 @@ export const updateExam = async (req, res) => {
   }
 }
 
-// ── DELETE EXAM ───────────────────────────────────────────────────────────────
-// DELETE /api/exams/:id   (Admin only)
-// Cascade delete is set in schema (Questions are deleted automatically).
 export const deleteExam = async (req, res) => {
   try {
     const examId = parseInt(req.params.id)
@@ -168,31 +144,21 @@ export const deleteExam = async (req, res) => {
   }
 }
 
-// ── GET AVAILABLE EXAMS (Student — Phase 4) ───────────────────────────────────
-// GET /api/exams/available
-// Returns exams grouped into two lists:
-//   active   → the exam window is open RIGHT NOW (student can start)
-//   upcoming → the exam hasn't started yet (student can see it's coming)
-// Exams whose endTime has passed are excluded entirely.
 export const getAvailableExams = async (req, res) => {
   try {
     const now = new Date()
 
-    // Fetch all exams that:
-    //   1. Haven't ended yet
-    //   2. Have at least one question — exams with zero questions are never attemptable
     const exams = await prisma.exam.findMany({
       where: {
         endTime: { gt: now },
-        questions: { some: {} }, // ← exclude zero-question exams
+        questions: { some: {} },
       },
       include: {
         _count: { select: { questions: true } },
       },
-      orderBy: { startTime: 'asc' }, // soonest first
+      orderBy: { startTime: 'asc' },
     })
 
-    // Split into active (can attempt now) and upcoming (starts in future)
     const active   = exams.filter((e) => new Date(e.startTime) <= now)
     const upcoming = exams.filter((e) => new Date(e.startTime) > now)
 
